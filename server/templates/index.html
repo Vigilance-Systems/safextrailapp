@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeXTrail · SAR Operations Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { background-color: #0b0f14; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .panel { background-color: #11161d; border: 1px solid #1e293b; }
+    #map { height: 100%; width: 100%; z-index: 1; background: #0d131a; }
+    .leaflet-tile-pane { filter: brightness(0.75) contrast(1.15) saturate(0.85); }  /* tactical dark map */
+    #root { height: 100%; width: 100%; min-height: 460px; overflow-y: auto; }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+  <!-- TOP STATUS BAR -->
+  <header class="h-12 bg-[#0f141b] border-b border-slate-800 px-4 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded bg-orange-500/20 border border-orange-500/50 flex items-center justify-center text-orange-400 font-bold">▲</div>
+      <div>
+        <div class="font-bold text-sm text-white tracking-wide">SafeXTrail</div>
+        <div class="text-[10px] text-slate-400 tracking-widest uppercase">SAR Operations Console</div>
+      </div>
+      <span class="ml-3 px-2.5 py-1 rounded bg-slate-800/80 border border-slate-700 text-slate-200">
+        Feed: <strong class="text-cyan-400">{{ mapshare_id or 'DEMO' }}</strong>
+      </span>
+      {% if demo %}
+      <span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold">DEMO DATA</span>
+      {% else %}
+      <span class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold">LIVE INREACH</span>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div id="alert-banner" class="px-3 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+        ⚡ Telescope Peak / Death Valley NP · Monitoring Active
+      </div>
+      <button onclick="fetchLocation()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition">
+        ↻ Refresh Telemetry
+      </button>
+      <div id="clock" class="text-right font-mono text-slate-300">--:--:-- UTC</div>
+    </div>
+  </header>
+
+  <!-- MAIN 3-COLUMN CONSOLE -->
+  <main class="flex-1 grid grid-cols-12 gap-2 p-2 overflow-hidden">
+
+    <!-- LEFT SIDEBAR: ROSTER, ACTIVE HIKER, TELEMETRY, ACTIONS -->
+    <aside class="col-span-3 flex flex-col gap-2 overflow-y-auto">
+
+      <!-- Roster by risk (filled by console.js from GET /api/v1/adventurers) -->
+      <div class="panel rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Adventurers · by risk</span>
+          <span class="text-[10px] text-slate-500">Updated live</span>
+        </div>
+        <div id="roster-list" class="space-y-1.5 max-h-56 overflow-y-auto">
+          <div class="text-xs text-slate-500">Loading roster…</div>
+        </div>
+      </div>
+
+      <!-- Active Hiker Card -->
+      <div class="panel rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Tracked Adventurer (live inReach)</span>
+          <span id="status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">ONLINE</span>
+        </div>
+
+        <div id="hiker-card" class="p-3 rounded-lg bg-slate-900/90 border-l-4 border-orange-500 border border-slate-800">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="font-bold text-sm text-white" id="hiker-name">ADVENTURER 1</div>
+              <div class="text-xs text-slate-400" id="hiker-event">Awaiting telemetry fix…</div>
+            </div>
+            <div id="risk-pill" class="w-11 h-11 shrink-0 rounded-lg bg-orange-500/20 border border-orange-500/50 flex flex-col items-center justify-center">
+              <span id="risk-score-val" class="text-base font-extrabold text-orange-400">--</span>
+              <span class="text-[9px] text-orange-300/80">RISK</span>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex justify-between">
+            <span id="fix-age">Last fix: --</span>
+            <span id="fix-coords" class="font-mono text-slate-300">--, --</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Grid -->
+      <div class="panel rounded-lg p-3">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Live InReach Telemetry</div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/80 p-2.5 rounded border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">Elevation</div>
+            <div id="tel-elev" class="text-sm font-bold text-white mt-0.5">—</div>
+          </div>
+          <div class="bg-slate-900/80 p-2.5 rounded border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">Speed / Pace</div>
+            <div id="tel-speed" class="text-sm font-bold text-white mt-0.5">—</div>
+          </div>
+          <div class="bg-slate-900/80 p-2.5 rounded border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">Course / Heading</div>
+            <div id="tel-course" class="text-sm font-bold text-white mt-0.5">—</div>
+          </div>
+          <div class="bg-slate-900/80 p-2.5 rounded border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">SOS Status</div>
+            <div id="tel-sos" class="text-sm font-bold text-emerald-400 mt-0.5">INACTIVE</div>
+          </div>
+        </div>
+
+        <div class="mt-2 bg-slate-900/80 p-2.5 rounded border border-slate-800 text-xs">
+          <div class="text-[10px] text-slate-400 uppercase mb-1">Latest Check-In Message</div>
+          <div id="tel-msg" class="text-slate-200 italic">No message transmitted.</div>
+        </div>
+      </div>
+
+      <!-- Quick Operator Actions -->
+      <div class="panel rounded-lg p-3 mt-auto">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Operator Quick Actions</div>
+
+        <label class="block text-[10px] text-slate-400 uppercase mb-1" for="return-utc">Expected return (UTC, optional)</label>
+        <input id="return-utc" type="text" placeholder="2026-11-21T23:30:00Z"
+               class="w-full mb-2 px-2 py-1.5 rounded bg-slate-900 border border-slate-700 text-xs font-mono text-slate-100" />
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="runQuickAssessment()" class="col-span-2 py-2 px-3 rounded bg-orange-600 hover:bg-orange-500 text-white font-semibold transition">
+            ⚡ Run Automated Risk Assessment
+          </button>
+          <button onclick="centerOnHiker()" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">
+            🎯 Center Map
+          </button>
+          <a href="/api/location" target="_blank" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-center">
+            { } Raw JSON
+          </a>
+          <!-- Human-approved actions: each asks for an approver's name; nothing is sent automatically -->
+          <button onclick="sendAction('dispatch')" class="col-span-2 py-2 px-3 rounded bg-red-600 hover:bg-red-500 text-white font-semibold transition">
+            Dispatch Ranger
+          </button>
+          <button onclick="sendAction('message')" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">
+            ✉ Message
+          </button>
+          <button onclick="sendAction('alert-sar')" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">
+            ▲ Alert SAR team
+          </button>
+        </div>
+        <div id="api-assess-output" class="hidden mt-2 p-2.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: TOPOGRAPHIC MAP + LIVE EVENT FEED -->
+    <section class="col-span-5 flex flex-col gap-2 overflow-hidden">
+      <div class="panel rounded-lg flex-1 relative overflow-hidden">
+        <div id="map"></div>
+        <!-- Map Legend Overlay -->
+        <div class="absolute bottom-3 left-3 z-[1000] bg-slate-950/90 border border-slate-800 rounded-lg p-2.5 text-[11px] space-y-1">
+          <div class="font-semibold text-slate-300 uppercase text-[10px]">Legend</div>
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> High Risk (70–100)</div>
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Elevated (40–69)</div>
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Normal (0–39)</div>
+        </div>
+      </div>
+
+      <!-- Bottom Live Event Feed -->
+      <div class="panel rounded-lg h-36 p-2.5 flex flex-col">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-semibold mb-1.5">
+          <span>Live Telemetry Event Feed</span>
+          <span class="text-slate-500">Auto-sync: 30s</span>
+        </div>
+        <div id="event-feed" class="flex-1 overflow-y-auto space-y-1 font-mono text-[11px]">
+          <div class="text-slate-500">Initializing SAR telemetry stream…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: WATSONX ORCHESTRATE risk_agent (via our /api/v1, key stays on the server) -->
+    <section class="col-span-4 panel rounded-lg flex flex-col overflow-hidden">
+      <div class="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-white">IBM watsonx Orchestrate · <span class="text-cyan-400">risk_agent</span></div>
+          <div class="text-[10px] text-slate-400">Click “Run Automated Risk Assessment”, or ask below.</div>
+        </div>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      </div>
+      <!-- console.js renders the structured assessment and the chat box into #root -->
+      <div id="root" class="flex-1 bg-[#0d1117]">
+        <div class="p-4 text-xs text-slate-500">No assessment yet. Run one to see the score, the reasons, and a draft message that needs your approval.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='console.js') }}"></script>
+</body>
+</html>

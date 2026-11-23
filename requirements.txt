@@ -1,0 +1,10 @@
+# Local development (scrapers, notebook, tests). The Orchestrate tools have their own list.
+requests>=2.31
+beautifulsoup4>=4.12
+pandas>=2.0
+numpy>=1.26
+scikit-learn>=1.4
+matplotlib>=3.8
+openpyxl>=3.1        # reads the NPS mortality .xlsx
+flask>=3.0           # server/app.py
+jupyter>=1.0

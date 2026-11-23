@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>KML Export (demo)</name>
+    <Folder>
+      <name>Demo User</name>
+      <Placemark>
+        <TimeStamp><when>2026-10-30T15:00:00Z</when></TimeStamp>
+        <styleUrl>#style_1</styleUrl>
+        <ExtendedData>
+          <Data name="Name"><value>Demo User</value></Data>
+          <Data name="Time UTC"><value>2026-10-30T15:00:00Z</value></Data>
+          <Data name="Latitude"><value>36.6536</value></Data>
+          <Data name="Longitude"><value>-121.7978</value></Data>
+          <Data name="Elevation"><value>42.00 m from MSL</value></Data>
+          <Data name="Velocity"><value>4.0 km/h</value></Data>
+          <Data name="Course"><value>225.00 ° True</value></Data>
+          <Data name="Device Type"><value>inReach Mini 2</value></Data>
+          <Data name="Event"><value>Tracking interval received.</value></Data>
+          <Data name="Text"><value></value></Data>
+        </ExtendedData>
+        <Point><coordinates>-121.7978,36.6536,42</coordinates></Point>
+      </Placemark>
+      <Placemark>
+        <TimeStamp><when>2026-10-30T15:10:00Z</when></TimeStamp>
+        <styleUrl>#style_1</styleUrl>
+        <ExtendedData>
+          <Data name="Name"><value>Demo User</value></Data>
+          <Data name="Time UTC"><value>2026-10-30T15:10:00Z</value></Data>
+          <Data name="Latitude"><value>36.6448</value></Data>
+          <Data name="Longitude"><value>-121.8102</value></Data>
+          <Data name="Elevation"><value>42.00 m from MSL</value></Data>
+          <Data name="Velocity"><value>4.0 km/h</value></Data>
+          <Data name="Course"><value>225.00 ° True</value></Data>
+          <Data name="Device Type"><value>inReach Mini 2</value></Data>
+          <Data name="Event"><value>Tracking interval received.</value></Data>
+          <Data name="Text"><value></value></Data>
+        </ExtendedData>
+        <Point><coordinates>-121.8102,36.6448,42</coordinates></Point>
+      </Placemark>
+      <Placemark>
+        <TimeStamp><when>2026-10-30T15:20:00Z</when></TimeStamp>
+        <styleUrl>#style_1</styleUrl>
+        <ExtendedData>
+          <Data name="Name"><value>Demo User</value></Data>
+          <Data name="Time UTC"><value>2026-10-30T15:20:00Z</value></Data>
+          <Data name="Latitude"><value>36.6301</value></Data>
+          <Data name="Longitude"><value>-121.8247</value></Data>
+          <Data name="Elevation"><value>42.00 m from MSL</value></Data>
+          <Data name="Velocity"><value>4.0 km/h</value></Data>
+          <Data name="Course"><value>225.00 ° True</value></Data>
+          <Data name="Device Type"><value>inReach Mini 2</value></Data>
+          <Data name="Event"><value>Tracking interval received.</value></Data>
+          <Data name="Text"><value></value></Data>
+        </ExtendedData>
+        <Point><coordinates>-121.8247,36.6301,42</coordinates></Point>
+      </Placemark>
+      <Placemark>
+        <TimeStamp><when>2026-10-30T15:30:00Z</when></TimeStamp>
+        <styleUrl>#style_1</styleUrl>
+        <ExtendedData>
+          <Data name="Name"><value>Demo User</value></Data>
+          <Data name="Time UTC"><value>2026-10-30T15:30:00Z</value></Data>
+          <Data name="Latitude"><value>36.6177</value></Data>
+          <Data name="Longitude"><value>-121.8406</value></Data>
+          <Data name="Elevation"><value>42.00 m from MSL</value></Data>
+          <Data name="Velocity"><value>4.0 km/h</value></Data>
+          <Data name="Course"><value>225.00 ° True</value></Data>
+          <Data name="Device Type"><value>inReach Mini 2</value></Data>
+          <Data name="Event"><value>Msg to shared map received</value></Data>
+          <Data name="Text"><value>Heading to the beach!</value></Data>
+        </ExtendedData>
+        <Point><coordinates>-121.8406,36.6177,42</coordinates></Point>
+      </Placemark>
+      <Placemark>
+        <name>Demo User</name>
+        <LineString><tessellate>1</tessellate><coordinates>-121.7978,36.6536,42 -121.8102,36.6448,42 -121.8247,36.6301,42 -121.8406,36.6177,42</coordinates></LineString>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>
